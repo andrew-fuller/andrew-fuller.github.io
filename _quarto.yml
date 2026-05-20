@@ -25,7 +25,7 @@ website:
         href: https://github.com/andrew-fuller
         aria-label: GitHub
       - icon: linkedin
-        href: https://www.linkedin.com/in/andrew-fuller
+        href: https://www.linkedin.com/in/fullerauow/
         aria-label: LinkedIn
 
   page-footer:
@@ -35,7 +35,7 @@ website:
       - icon: github
         href: https://github.com/andrew-fuller
       - icon: linkedin
-        href: https://www.linkedin.com/in/andrew-fuller
+        href: https://www.linkedin.com/in/fullerauow/
 
 format:
   html:
