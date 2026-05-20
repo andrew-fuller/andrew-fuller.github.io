@@ -1,0 +1,68 @@
+---
+title: "Projects"
+page-layout: article
+toc: false
+---
+
+A selection of things I've built or contributed to. Most of my work is in production systems that aren't publicly available, but I'll share what I can here.
+
+---
+
+```{=html}
+<div class="project-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+      <h3 style="margin: 0 0 0.4rem 0;">🏥 AROC Benchmarking Dashboard</h3>
+      <span class="skill-tag">R/Shiny</span>
+      <span class="skill-tag">bslib</span>
+      <span class="skill-tag">echarts4r</span>
+      <span class="skill-tag">SQL Server</span>
+    </div>
+  </div>
+  <p style="margin: 1rem 0 0.5rem;">Interactive dashboard allowing Australian rehabilitation hospitals to benchmark their outcomes against national peers. Covers functional independence scores, length of stay, and efficiency metrics.</p>
+  <p style="color: #64748B; font-size: 0.875rem; margin: 0;">Production system — internal to AROC member facilities.</p>
+</div>
+
+<div class="project-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+      <h3 style="margin: 0 0 0.4rem 0;">📍 Brain & Spine Service Coverage Map</h3>
+      <span class="skill-tag">R</span>
+      <span class="skill-tag">leaflet</span>
+      <span class="skill-tag">sf</span>
+      <span class="skill-tag">OSRM</span>
+    </div>
+    <a href="https://github.com/andrew-fuller" style="font-size: 0.85rem;">View on GitHub →</a>
+  </div>
+  <p style="margin: 1rem 0 0.5rem;">Geospatial analysis mapping drive-time accessibility to brain and spinal rehabilitation services across Australia. Identifies geographic gaps in specialist service access.</p>
+</div>
+
+<div class="project-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+      <h3 style="margin: 0 0 0.4rem 0;">📋 Data Chasing Module</h3>
+      <span class="skill-tag">R/Shiny</span>
+      <span class="skill-tag">Modules</span>
+      <span class="skill-tag">bslib</span>
+    </div>
+  </div>
+  <p style="margin: 1rem 0 0.5rem;">Shiny module system that tracks, flags, and communicates data quality issues to clinical coders at member hospitals. Replaced a manual email-based process and dramatically reduced data lag.</p>
+  <p style="color: #64748B; font-size: 0.875rem; margin: 0;">Production system — internal to AROC.</p>
+</div>
+
+<div class="project-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+      <h3 style="margin: 0 0 0.4rem 0;">📄 Workshop Certificate Generator</h3>
+      <span class="skill-tag">R</span>
+      <span class="skill-tag">rmarkdown</span>
+      <span class="skill-tag">magick</span>
+    </div>
+  </div>
+  <p style="margin: 1rem 0 0.5rem;">Automated pipeline that takes a workshop registration CSV and generates personalised PDF completion certificates for every participant — eliminating hours of manual design work.</p>
+</div>
+```
+
+---
+
+*More projects will appear here as I document them. Most of my work lives in private repositories due to the sensitive nature of health data.*

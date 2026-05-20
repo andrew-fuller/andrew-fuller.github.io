@@ -1,0 +1,80 @@
+/*-- scss:defaults --*/
+
+$primary:     #3B82F6;
+$secondary:   #94A3B8;
+$body-bg:     #0F172A;
+$body-color:  #CBD5E1;
+$navbar-bg:   #020617;
+$navbar-fg:   #F1F5F9;
+
+$font-family-sans-serif: "Inter", system-ui, sans-serif;
+$font-family-monospace: "JetBrains Mono", monospace;
+$headings-font-weight: 700;
+
+/*-- scss:rules --*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+body { color: #CBD5E1; }
+
+.hero-section {
+  background: linear-gradient(135deg, #020617 0%, #0F172A 50%, #1E3A5F 100%);
+
+  .badge-pill {
+    background: rgba(59,130,246,0.15);
+    border-color: rgba(59,130,246,0.3);
+  }
+}
+
+.quarto-post {
+  background: #1E293B;
+  border-color: #334155;
+
+  &:hover {
+    border-color: $primary;
+    box-shadow: 0 10px 30px rgba(59,130,246,0.2);
+  }
+
+  .card-title { color: #F1F5F9; }
+  .card-text { color: #94A3B8; }
+  .listing-categories .badge {
+    background: rgba(59,130,246,0.15);
+    border-color: rgba(59,130,246,0.3);
+    color: #93C5FD;
+  }
+}
+
+.feature-card {
+  background: #1E293B;
+  border-color: #334155;
+
+  &:hover {
+    background: rgba(59,130,246,0.1);
+    border-color: $primary;
+  }
+
+  h3 { color: #F1F5F9; }
+}
+
+.skill-tag {
+  background: rgba(59,130,246,0.1);
+  color: #93C5FD;
+  border-color: rgba(59,130,246,0.3);
+
+  &:hover {
+    background: $primary;
+    color: white;
+  }
+}
+
+pre.sourceCode {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+#TOC a {
+  color: #64748B;
+  &:hover { color: $primary; }
+}
+
+.quarto-title .title { color: #F1F5F9; }

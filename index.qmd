@@ -1,0 +1,119 @@
+---
+title: ""
+page-layout: full
+toc: false
+---
+
+```{=html}
+<div class="reading-progress" id="reading-progress"></div>
+
+<section class="hero-section">
+  <h1>👋 Hey, I'm Andrew Fuller</h1>
+  <p class="hero-tagline">
+    Data analyst & R developer working in health informatics. I turn messy clinical data into
+    insights that improve rehabilitation outcomes across Australia.
+  </p>
+  <div class="hero-badges">
+    <span class="badge-pill">📊 R & Shiny</span>
+    <span class="badge-pill">🏥 Health Data</span>
+    <span class="badge-pill">📈 Data Visualisation</span>
+    <span class="badge-pill">🔬 Clinical Informatics</span>
+    <span class="badge-pill">🗄️ SQL</span>
+  </div>
+</section>
+```
+
+## What I Do
+
+```{=html}
+<div class="feature-grid">
+  <div class="feature-card">
+    <div class="feature-icon">📊</div>
+    <h3>Data Analysis & Reporting</h3>
+    <p>Building automated reports and dashboards that surface meaningful patterns in clinical rehabilitation data.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🖥️</div>
+    <h3>Shiny App Development</h3>
+    <p>Creating interactive web applications in R/Shiny that let clinicians explore their own data without needing to code.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🗺️</div>
+    <h3>Geospatial Analysis</h3>
+    <p>Mapping service coverage, patient flows, and accessibility gaps across Australian health regions.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">📝</div>
+    <h3>Writing & Teaching</h3>
+    <p>Sharing what I learn about R, data workflows, and the quirks of working with health data in the real world.</p>
+  </div>
+</div>
+```
+
+## Recent Posts
+
+```{=html}
+<div id="recent-posts-placeholder"></div>
+```
+
+::: {.listing}
+```{r}
+#| echo: false
+#| output: false
+# This listing block is rendered by Quarto — see blog/index.qmd
+```
+:::
+
+[View all posts →](blog/index.qmd){.btn .btn-primary style="margin-top:1rem;"}
+
+---
+
+## Tech Stack
+
+```{=html}
+<div style="margin: 1rem 0;">
+  <span class="skill-tag">R</span>
+  <span class="skill-tag">Shiny</span>
+  <span class="skill-tag">Quarto</span>
+  <span class="skill-tag">ggplot2</span>
+  <span class="skill-tag">dplyr</span>
+  <span class="skill-tag">tidyr</span>
+  <span class="skill-tag">SQL</span>
+  <span class="skill-tag">bslib</span>
+  <span class="skill-tag">leaflet</span>
+  <span class="skill-tag">echarts4r</span>
+  <span class="skill-tag">Git</span>
+  <span class="skill-tag">GitHub Actions</span>
+</div>
+```
+
+---
+
+*Currently based in Wollongong, NSW 🇦🇺 — working on data and analytics for rehabilitation medicine.*
+
+```{=html}
+<script>
+// Reading progress bar
+const progressBar = document.getElementById('reading-progress');
+if (progressBar) {
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = progress + '%';
+  });
+}
+
+// Back to top button
+const btn = document.createElement('button');
+btn.className = 'back-to-top';
+btn.innerHTML = '↑';
+btn.title = 'Back to top';
+btn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+document.body.appendChild(btn);
+
+window.addEventListener('scroll', () => {
+  btn.classList.toggle('visible', window.scrollY > 300);
+});
+</script>
+```

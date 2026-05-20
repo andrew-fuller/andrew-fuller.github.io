@@ -1,0 +1,322 @@
+/*-- scss:defaults --*/
+
+// Color palette
+$primary:     #2563EB;
+$secondary:   #64748B;
+$success:     #10B981;
+$info:        #0EA5E9;
+$warning:     #F59E0B;
+$danger:      #EF4444;
+
+// Typography
+$font-family-sans-serif: "Inter", system-ui, -apple-system, sans-serif;
+$font-family-monospace: "JetBrains Mono", "Fira Code", monospace;
+$headings-font-weight: 700;
+$font-size-root: 16px;
+$line-height-base: 1.7;
+
+// Navbar
+$navbar-bg: #0F172A;
+$navbar-fg: #F8FAFC;
+$navbar-hl: #2563EB;
+
+// Body
+$body-bg: #FFFFFF;
+$body-color: #1E293B;
+
+// Code blocks
+$code-bg: #F1F5F9;
+$code-color: #0F172A;
+
+/*-- scss:rules --*/
+
+// Google Fonts import
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+// Navbar refinements
+.navbar {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.1);
+  padding: 0.6rem 1rem;
+
+  .navbar-brand {
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    color: #F8FAFC !important;
+  }
+
+  .nav-link {
+    font-weight: 500;
+    font-size: 0.9rem;
+    letter-spacing: 0.01em;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $navbar-hl !important;
+    }
+  }
+}
+
+// Hero section
+.hero-section {
+  background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 50%, #2563EB 100%);
+  color: white;
+  padding: 5rem 2rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  .hero-tagline {
+    font-size: 1.2rem;
+    opacity: 0.85;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    font-weight: 400;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    position: relative;
+  }
+
+  .badge-pill {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255,255,255,0.25);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+// Blog listing cards
+.quarto-listing-default .list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.quarto-post {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(37,99,235,0.12);
+    border-color: $primary;
+  }
+
+  .listing-item-img-placeholder,
+  .thumbnail {
+    height: 160px;
+    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  .card-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #0F172A;
+    line-height: 1.35;
+  }
+
+  .card-text {
+    color: $secondary;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .listing-categories .badge {
+    background: #EFF6FF;
+    color: $primary;
+    border: 1px solid #BFDBFE;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+}
+
+// Post page
+.quarto-title {
+  .title {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0F172A;
+    line-height: 1.2;
+  }
+}
+
+// Feature cards on homepage
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0;
+}
+
+.feature-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: $primary;
+    background: #EFF6FF;
+    transform: translateY(-2px);
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0F172A;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $secondary;
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+// Skills / tag pills
+.skill-tag {
+  display: inline-block;
+  background: #EFF6FF;
+  color: $primary;
+  border: 1px solid #BFDBFE;
+  border-radius: 6px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0.2rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: $primary;
+    color: white;
+    border-color: $primary;
+  }
+}
+
+// Reading progress bar
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, $primary, $info);
+  z-index: 9999;
+  transition: width 0.1s ease;
+}
+
+// Footer
+.nav-footer {
+  background: #0F172A !important;
+  color: #94A3B8 !important;
+  border-top: 1px solid #1E293B !important;
+  padding: 1.5rem 0 !important;
+  font-size: 0.875rem;
+
+  a {
+    color: #94A3B8 !important;
+    transition: color 0.2s;
+
+    &:hover {
+      color: white !important;
+    }
+  }
+}
+
+// Code blocks
+pre.sourceCode {
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  font-size: 0.875rem;
+}
+
+// Callouts
+.callout {
+  border-radius: 10px;
+  border-left-width: 4px;
+}
+
+// TOC
+#TOC {
+  border-left: 2px solid $primary;
+  padding-left: 1rem;
+  font-size: 0.875rem;
+
+  a {
+    color: $secondary;
+    transition: color 0.2s;
+
+    &:hover, &.active {
+      color: $primary;
+    }
+  }
+}
+
+// Smooth scrolling
+html {
+  scroll-behavior: smooth;
+}
+
+// Animations
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-section > * {
+  animation: fadeInUp 0.6s ease both;
+
+  &:nth-child(2) { animation-delay: 0.1s; }
+  &:nth-child(3) { animation-delay: 0.2s; }
+}

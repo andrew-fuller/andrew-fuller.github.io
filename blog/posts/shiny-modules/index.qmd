@@ -1,0 +1,88 @@
+---
+title: "Getting Started with Shiny Modules"
+description: "A practical walkthrough of how Shiny modules helped me tame a 3,000-line server function and actually made my app faster to build."
+author: "Andrew Fuller"
+date: "2026-05-15"
+categories: [R, Shiny, Tutorial]
+image: "thumbnail.png"
+toc: true
+---
+
+## The Problem
+
+Anyone who has built a non-trivial Shiny app has probably ended up staring at a `server.R` that grew to an unmanageable size. Mine hit around 3,000 lines before I finally caved and learned how modules work properly.
+
+The app was a clinical dashboard for rehabilitation benchmarking — multiple tabs, multiple filters, reactive chains that crossed each other in ways that were hard to reason about. Every time I needed to change how one filter worked, I'd spend 20 minutes tracking down all the places it was referenced.
+
+## What Are Shiny Modules?
+
+A Shiny module is a pair of functions — a **UI function** and a **server function** — that encapsulate a piece of your app. The key insight is that modules have their own **namespace**: reactive values, inputs, and outputs inside a module can't accidentally clash with each other.
+
+```r
+# A simple module UI function
+myModuleUI <- function(id) {
+  ns <- NS(id)   # <-- creates the namespace
+  tagList(
+    selectInput(ns("my_select"), "Choose:", choices = c("A", "B", "C")),
+    tableOutput(ns("my_table"))
+  )
+}
+
+# The paired server function
+myModuleServer <- function(id, data) {
+  moduleServer(id, function(input, output, session) {
+    filtered <- reactive({
+      data |> dplyr::filter(group == input$my_select)
+    })
+
+    output$my_table <- renderTable(filtered())
+  })
+}
+```
+
+And then in your main app:
+
+```r
+# ui.R
+ui <- fluidPage(
+  myModuleUI("tab1"),
+  myModuleUI("tab2")   # completely isolated from tab1
+)
+
+# server.R
+server <- function(input, output, session) {
+  myModuleServer("tab1", data = my_data)
+  myModuleServer("tab2", data = my_other_data)
+}
+```
+
+The `NS(id)` call is the magic — it prefixes every `inputId` and `outputId` with the module's id, so `"my_select"` inside `"tab1"` becomes `"tab1-my_select"` in the DOM.
+
+## Passing Reactives Between Modules
+
+The gotcha that tripped me up initially: **reactives are passed as functions, not values**.
+
+```r
+# WRONG — passes the current value, not a reactive expression
+myModuleServer("mod", data = my_reactive_data())
+
+# RIGHT — passes the reactive itself
+myModuleServer("mod", data = my_reactive_data)
+```
+
+Inside the module, you then call `data()` where you need the value. This means your module stays in sync automatically when the upstream reactive changes.
+
+## The Result
+
+After the refactor:
+
+- `server.R` went from ~3,000 lines to ~120 lines
+- Each module lives in its own file, making navigation trivial
+- I can test modules in isolation
+- Adding a new tab is now a 20-minute job instead of an afternoon
+
+If you're building anything beyond a demo app and haven't tried modules yet, start now. Your future self will thank you.
+
+---
+
+*Questions or corrections? Open an issue on [GitHub](https://github.com/andrew-fuller).*

@@ -1,0 +1,52 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Andrew Fuller"
+  description: "Data analyst, R developer, and health informatics enthusiast. Writing about data, code, and insights."
+  favicon: assets/favicon.ico
+  site-url: https://andrew-fuller.github.io
+  repo-url: https://github.com/andrew-fuller/andrew-fuller.github.io
+  repo-actions: [edit, issue]
+
+  navbar:
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Blog"
+        href: blog/index.qmd
+      - text: "Projects"
+        href: projects.qmd
+      - text: "About"
+        href: about.qmd
+    right:
+      - icon: github
+        href: https://github.com/andrew-fuller
+        aria-label: GitHub
+      - icon: linkedin
+        href: https://www.linkedin.com/in/andrew-fuller
+        aria-label: LinkedIn
+
+  page-footer:
+    left: "© 2026 Andrew Fuller"
+    center: "Built with [Quarto](https://quarto.org)"
+    right:
+      - icon: github
+        href: https://github.com/andrew-fuller
+      - icon: linkedin
+        href: https://www.linkedin.com/in/andrew-fuller
+
+format:
+  html:
+    theme:
+      light: [flatly, assets/styles.scss]
+      dark: [darkly, assets/styles-dark.scss]
+    css: assets/custom.css
+    toc: true
+    highlight-style: github
+    code-copy: true
+    code-overflow: wrap
+
+execute:
+  freeze: auto

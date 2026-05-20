@@ -1,0 +1,85 @@
+---
+title: "About Me"
+page-layout: article
+toc: false
+---
+
+```{=html}
+<div style="display: flex; gap: 2.5rem; align-items: flex-start; flex-wrap: wrap; margin-bottom: 2rem;">
+  <div style="flex: 1; min-width: 260px;">
+```
+
+## Hi, I'm Andrew 👋
+
+I'm a **data analyst and R developer** based in Wollongong, NSW, working in health informatics for the Australian Rehabilitation Outcomes Centre (AROC) at the University of Wollongong.
+
+My day-to-day involves wrangling large clinical datasets, building Shiny dashboards that clinicians actually want to use, and writing the kind of automated reports that save people from hours of manual Excel work.
+
+I started this site as a place to write about what I'm building, what I'm learning, and the occasional deep-dive into a data problem that stumped me long enough to be worth sharing.
+
+```{=html}
+  </div>
+  <div style="flex: 0 0 auto; text-align: center;">
+    <img src="https://avatars.githubusercontent.com/u/62673895?v=4"
+         alt="Andrew Fuller"
+         style="width: 160px; height: 160px; border-radius: 50%; border: 3px solid #2563EB; box-shadow: 0 4px 20px rgba(37,99,235,0.2);" />
+    <div style="margin-top: 0.75rem;">
+      <a href="https://github.com/andrew-fuller" style="margin: 0 0.3rem; font-size: 1.3rem;" title="GitHub">🐙</a>
+      <a href="mailto:fullera@uow.edu.au" style="margin: 0 0.3rem; font-size: 1.3rem;" title="Email">✉️</a>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## Background
+
+I work primarily in **R** — it's my tool of choice for everything from data cleaning and statistical analysis through to full web applications via Shiny. I'm particularly interested in how interactive data products can put analytical power directly in the hands of clinicians who understand their own context but don't have time to learn to code.
+
+My work spans:
+
+- **Rehabilitation benchmarking** — processing and reporting on functional independence scores across hundreds of Australian hospitals
+- **Interactive dashboards** — building Shiny apps with `bslib`, `echarts4r`, `leaflet`, and `DT` that run in production
+- **Geospatial analysis** — mapping patient catchments, service coverage, and travel-time accessibility
+- **Data quality tooling** — automated pipelines that identify and communicate data issues back to clinical coders
+
+---
+
+## Skills & Tools
+
+```{=html}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
+
+  <div class="feature-card">
+    <div class="feature-icon">📦</div>
+    <h3>R Ecosystem</h3>
+    <p>tidyverse, Shiny, bslib, Quarto, ggplot2, DT, leaflet, echarts4r, sf</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">🗄️</div>
+    <h3>Data & Databases</h3>
+    <p>SQL Server, DBI, ODBC, data modelling, ETL pipelines</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">🔧</div>
+    <h3>Dev Tools</h3>
+    <p>Git, GitHub Actions, RStudio, VS Code, Docker basics</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">🏥</div>
+    <h3>Domain</h3>
+    <p>Health informatics, clinical data quality, rehabilitation outcomes, FIM scoring</p>
+  </div>
+
+</div>
+```
+
+---
+
+## Get In Touch
+
+The best way to reach me is via [GitHub](https://github.com/andrew-fuller) or email at [fullera@uow.edu.au](mailto:fullera@uow.edu.au). I'm always happy to chat about R, health data, or anything in the space between.
