@@ -1,0 +1,444 @@
+---
+title: "Building a Bulk Email Dispatcher in Shiny"
+description: "How I built a production Shiny app that sends hundreds of personalised HTML emails via Outlook — with rate limiting, a test mode, a live progress bar, and a rendered R Markdown email template."
+author: "Andrew Fuller"
+date: "2026-05-20"
+categories: [R, Shiny, Email, Tutorial, Production]
+image: "thumbnail.png"
+toc: true
+toc-depth: 3
+---
+
+At AROC, we send personalised data deadline reminder emails to hundreds of Australian rehabilitation hospitals
+every reporting cycle. Each email contains a colour-coded summary table showing that hospital's episode
+submission counts across the year — and whether they're on track, lagging, or missing data entirely.
+
+For a long time this was a semi-manual process. It eventually got replaced with a proper Shiny
+module that handles the whole workflow: previewing the campaign, test-sending to a sandbox
+address, and finally dispatching to all real recipients — with a live progress bar and an
+Outlook integration that respects Microsoft's sending rate limits.
+
+This post walks through how it's built.
+
+---
+
+## The Problem
+
+We needed to send roughly 200–400 emails per campaign, each one:
+
+- **Personalised** — containing the specific hospital's own episode counts
+- **Formatted as HTML** — rendered from an R Markdown template with a colour-coded `{gt}` table
+- **Sent from an institutional address** — via Outlook, using `SentOnBehalfOfName`
+- **Trackable** — the database needed updating after each send so we didn't double-send
+
+The naive approach (a loop with `blastula` or `sendmailR`) hit problems fast: rate limits,
+no visibility into progress, and a terrifying "send all" button with no safety net.
+
+---
+
+## Architecture Overview
+
+The solution is three layers:
+
+```
+1. Plan      fn.PrepareEmailPlan()   – filter data, build a per-hospital send list
+2. Execute   fn.ExecuteSendAll()     – orchestrate: show waiter, call send, hide waiter
+3. Send      fn.SendAllEmails()      – the actual loop: render → send → sleep → repeat
+```
+
+The Shiny UI wraps this with a three-step workflow:
+
+> **Calculate Summary → Test Campaign → Send Production**
+
+Each step is gated — you can't send production until you've calculated, and you really
+shouldn't until you've test-sent first.
+
+---
+
+## Step 1: Building the Email Plan
+
+Before a single email goes out, `fn.PrepareEmailPlan()` assembles a row per hospital per pathway:
+
+```r
+fn.PrepareEmailPlan <- function(
+  session_data,
+  data_chasing_raw,
+  filter_active     = TRUE,
+  exclude_email_sent = FALSE,
+  exclude_complete   = FALSE,
+  filter_by_pathway  = FALSE,
+  pathway_select     = "Inpatient",
+  Paed_ids
+) {
+
+  # Combine all pathway datasets with a pathway_name column
+  inpatient_data  <- session_data$dataSummaryInpatient  |> mutate(pathway_num = 3L,  pathway_name = "Inpatient")
+  paed_data       <- session_data$dataSummaryPaed       |> mutate(pathway_num = if_else(Path == "Inpatient", 33L, 44L), pathway_name = paste0("Paediatric - ", Path))
+  inreach_data    <- session_data$dataSummaryInreach    |> mutate(pathway_num = 2L,  pathway_name = "Inreach")
+  ambulatory_data <- session_data$dataSummaryAmbulatory |> mutate(pathway_num = 4L,  pathway_name = "Ambulatory")
+  rith_data       <- session_data$dataSummaryRITH       |> mutate(pathway_num = 7L,  pathway_name = "RITH")
+
+  all_data <- bind_rows(
+    inpatient_data  |> select(HospitalId, ReportIdentifier, ReportName, HospitalName, Flag_Active, Flag_EmailSent, Complete, pathway_num, pathway_name),
+    paed_data       |> select(HospitalId, ReportIdentifier, ReportName, HospitalName, Flag_Active, Flag_EmailSent, Complete, pathway_num, pathway_name),
+    inreach_data    |> select(HospitalId, ReportIdentifier, ReportName, HospitalName, Flag_Active, Flag_EmailSent, Complete, pathway_num, pathway_name),
+    ambulatory_data |> select(HospitalId, ReportIdentifier, ReportName, HospitalName, Flag_Active, Flag_EmailSent, Complete, pathway_num, pathway_name),
+    rith_data       |> select(HospitalId, ReportIdentifier, ReportName, HospitalName, Flag_Active, Flag_EmailSent, Complete, pathway_num, pathway_name)
+  )
+
+  # Apply filters based on UI controls
+  filtered_data <- all_data
+  if (filter_active)       filtered_data <- filtered_data |> filter(Flag_Active == 1)
+  if (exclude_email_sent)  filtered_data <- filtered_data |> filter(Flag_EmailSent == FALSE | is.na(Flag_EmailSent))
+  if (exclude_complete)    filtered_data <- filtered_data |> filter(Complete == FALSE | is.na(Complete))
+  if (filter_by_pathway)   filtered_data <- filtered_data |> filter(pathway_name == pathway_select)
+
+  # One row per hospital+pathway, with a list-column of all their report IDs
+  email_plan <- filtered_data |>
+    group_by(HospitalId, pathway_num, pathway_name) |>
+    summarise(
+      hospital_name       = first(HospitalName),
+      report_identifiers  = list(ReportIdentifier),
+      report_count        = n(),
+      .groups = "drop"
+    )
+
+  # Fetch contacts and pre-build the facility data slice for the Rmd template
+  email_plan <- email_plan |>
+    rowwise() |>
+    mutate(
+      contacts      = list(data_chasing_raw |> filter(HospitalId == HospitalId)),
+      to_emails     = paste(unique(contacts$Email[!is.na(contacts$Email) & contacts$Email != ""]), collapse = ","),
+      contact_count = length(unique(contacts$Email[!is.na(contacts$Email) & contacts$Email != ""])),
+      facility_data = list({
+        ids <- report_identifiers
+        df  <- switch(as.character(pathway_num),
+          "3"  = session_data$dataSummaryInpatient,
+          "2"  = session_data$dataSummaryInreach,
+          "4"  = session_data$dataSummaryAmbulatory,
+          "7"  = session_data$dataSummaryRITH,
+          "33" = ,
+          "44" = session_data$dataSummaryPaed,
+          NULL
+        )
+        if (!is.null(df)) df |> filter(ReportIdentifier %in% ids) else NULL
+      })
+    ) |>
+    ungroup()
+
+  list(
+    email_plan        = email_plan,
+    summary_stats     = list(
+      total_emails    = nrow(email_plan),
+      unique_hospitals = length(unique(email_plan$HospitalId)),
+      unique_contacts  = sum(email_plan$contact_count),
+      total_effective_emails = sum(email_plan$contact_count),
+      total_reports    = sum(email_plan$report_count)
+    ),
+    pathway_breakdown = email_plan |>
+      group_by(pathway_name) |>
+      summarise(emails = n(), hospitals = n_distinct(HospitalId), reports = sum(report_count), contacts = sum(contact_count), .groups = "drop")
+  )
+}
+```
+
+The key design choices here:
+
+1. **`list()` columns for report IDs** — each row holds *all* a hospital's report IDs as a list, so one email covers all their reports for a pathway in a single send
+2. **`facility_data` is pre-sliced** — the Rmd template receives a data frame filtered to just that hospital, not the whole dataset
+3. **Contacts are fetched inline via `rowwise()`** — slightly slow for very large plans, but avoids a complex join
+
+---
+
+## Step 2: The Email Template
+
+The actual email is a parameterised R Markdown document (`CreateEmail.Rmd`) that renders to HTML
+and produces a colour-coded `{gt}` table.
+
+```yaml
+---
+output: blastula::blastula_email
+params:
+  path:                    NA
+  facility:                NA
+  web_config_period:       NA
+  web_config_filtered_months: NA
+---
+```
+
+The template automatically:
+
+- Calculates the correct **deadline date** from the reporting period name
+  (`FY2025` → 14 August 2025, `CY2025` → 14 February 2026)
+- Formats **month column headers** with year suffixes (`Jul-24`, `Aug-24`, …)
+- Conditionally colour-codes cells: 🟥 zero count, 🟨 below lower bound, 🟩 above upper bound
+
+```r
+for (i in seq_along(web_config_filtered_months)) {
+  tbl1 <- tbl1 |>
+    tab_style(
+      style     = list(cell_text(color = "#b2a46d", weight = "bold"), cell_fill(color = "#ffeb9c")),
+      locations = cells_body(columns = web_config_filtered_months[i],
+                             rows    = tbl1$`_data`[[web_config_filtered_months[i]]] <= lower_bound)
+    ) |>
+    tab_style(
+      style     = list(cell_text(color = "#86a28c", weight = "bold"), cell_fill(color = "#c6efce")),
+      locations = cells_body(columns = web_config_filtered_months[i],
+                             rows    = tbl1$`_data`[[web_config_filtered_months[i]]] >= upper_bound)
+    ) |>
+    tab_style(
+      style     = list(cell_text(color = "#b28b90", weight = "bold"), cell_fill(color = "#ffc7ce")),
+      locations = cells_body(columns = web_config_filtered_months[i],
+                             rows    = tbl1$`_data`[[web_config_filtered_months[i]]] == 0)
+    )
+}
+```
+
+The rendered HTML is read back in as a character string and stuffed directly into Outlook's
+`HTMLbody` field — no attachment, no external hosting required.
+
+---
+
+## Step 3: Sending with Rate Limiting
+
+This is the part that makes the whole system production-safe.
+
+Microsoft's Office 365 imposes a rate limit of around 30 emails per minute for most tenants
+(~1,800/hour). To stay well within limits we target **250 emails per hour**:
+
+```r
+fn.SendAllEmails <- function(
+  email_plan,
+  test_mode          = FALSE,
+  test_email         = "fullera@uow.edu.au",
+  target_rate_per_hour = 250,
+  ...
+) {
+
+  sleep_per_email <- (60 * 60) / target_rate_per_hour   # seconds per email = 14.4s
+
+  for (i in 1:nrow(email_plan)) {
+    row <- email_plan[i, ]
+
+    tryCatch({
+      # Render the Rmd to HTML for this specific hospital
+      rmarkdown::render(
+        "CreateEmail.Rmd",
+        params = list(
+          path                       = row$pathway_num,
+          facility                   = row$facility_data[[1]],
+          web_config_period          = web_config_period,
+          web_config_filtered_months = web_config_filtered_months
+        ),
+        quiet = TRUE
+      )
+
+      # Read the rendered HTML
+      email_body <- paste(readr::read_lines("CreateEmail.html"), collapse = " ")
+
+      # Redirect all recipients in test mode
+      to_recipients <- if (test_mode) test_email else row$to_emails
+      subject_line  <- paste0(
+        if (test_mode) "[TEST] " else "",
+        "AROC ", row$pathway_name, " data deadline for ", web_config_period,
+        " at ", row$hospital_name
+      )
+
+      # Send via Outlook COM automation
+      OutApp  <- RDCOMClient::COMCreate("Outlook.Application")
+      outMail <- OutApp$CreateItem(0)
+      outMail[["To"]]                <- gsub(",", ";", to_recipients)
+      outMail[["subject"]]           <- subject_line
+      outMail[["HTMLbody"]]          <- email_body
+      outMail[["SentOnBehalfOfName"]] <- "aroc-enquiries@uow.edu.au"
+      outMail$Send()
+
+      # Rate limit: sleep proportional to the number of contacts for this hospital
+      Sys.sleep(sleep_per_email * row$contact_count)
+
+    }, error = function(e) {
+      emails_failed <<- emails_failed + 1
+    })
+  }
+}
+```
+
+A few things worth noting:
+
+### Rate limiting math
+
+The `Sys.sleep()` call at the end of each iteration is sized by `contact_count` — because
+one "hospital email" might go to 3 people, which counts as 3 sends against the rate limit.
+
+```r
+Sys.sleep(sleep_per_email * row$contact_count)
+# e.g. if 3 contacts: sleep 14.4s × 3 = 43.2s before next send
+```
+
+### `RDCOMClient` COM automation
+
+`RDCOMClient` lets R drive Outlook as a COM object. It needs:
+- Outlook installed on the machine running the Shiny server ✅
+- The R process running as a user with Outlook configured ✅
+- The `SentOnBehalfOfName` field to be an address the user has delegate access for ✅
+
+```r
+OutApp  <- RDCOMClient::COMCreate("Outlook.Application")
+outMail <- OutApp$CreateItem(0)       # 0 = MailItem
+outMail[["To"]]      <- "a@b.com;c@d.com"   # semicolon-separated
+outMail[["HTMLbody"]] <- email_html
+outMail$Send()
+```
+
+---
+
+## Step 4: Test Mode
+
+The test mode pattern is threaded all the way through the stack via a single `test_mode` boolean:
+
+```r
+# In the UI — confirmation dialog before test send
+shinyalert(
+  title = "Test Send All Emails?",
+  text = tagList(
+    div(class = "alert alert-info",
+      h4("TEST MODE - SAFE TO SEND"),
+      p(strong("ALL emails will ONLY be sent to: "), code("fullera@uow.edu.au"))
+    ),
+    p("✓ Subjects marked with [TEST]"),
+    p("✓ NO database updates will be made")
+  ),
+  html = TRUE,
+  type = "info",
+  ...
+)
+```
+
+When `test_mode = TRUE`:
+
+1. `to_recipients` is replaced with the sandbox address regardless of what's in the plan
+2. `subject_line` is prefixed with `[TEST]`
+3. `fn.UpdateLog()` is **not** called — so the database flag stays `Flag_EmailSent = FALSE`
+
+This means you can send 5 test emails to yourself, inspect them in Outlook, and then run the
+real campaign knowing nothing in the database was touched.
+
+---
+
+## Step 5: Live Progress Feedback
+
+The trickiest UX part: showing progress while R is blocked in a for loop.
+
+The solution uses `waiter` for the overlay, but instead of the standard spinner we attach a
+custom HTML progress bar and update it via custom JavaScript messages:
+
+```r
+# Inside the send loop — update the waiter overlay
+session$sendCustomMessage(
+  "updateWaiterProgress",
+  list(
+    current = i,
+    total   = total_emails,
+    percent = round((i / total_emails) * 100, 1),
+    message = row$hospital_name     # "Sending to Royal Rehab..."
+  )
+)
+```
+
+```javascript
+// JavaScript handler registered in the app's www/
+Shiny.addCustomMessageHandler("updateWaiterProgress", function(data) {
+  document.getElementById("waiter-progress-text").textContent =
+    data.current + " / " + data.total + " emails sent";
+  document.getElementById("waiter-progress-bar").style.width = data.percent + "%";
+  document.getElementById("waiter-progress-message").textContent = data.message;
+});
+```
+
+The waiter overlay HTML is built in `fn.CreateEmailWaiter()`:
+
+```r
+fn.CreateEmailWaiter <- function(ns_func = NULL) {
+  Waiter$new(
+    html = tagList(
+      div(class = "waiter-content-center",
+        img(src = "logo.png", style = "width: 150px;"),
+        h4(id = "waiter-progress-text", "Preparing to send emails..."),
+        div(class = "waiter-progress-bar-container",
+          div(id = "waiter-progress-bar", class = "waiter-progress-bar",
+              style = "width: 0%;")
+        ),
+        p(id = "waiter-progress-message", "Initializing...")
+      )
+    ),
+    color = "rgba(255,255,255,0.9)",
+    fadeout = TRUE
+  )
+}
+```
+
+The result: a full-screen overlay that smoothly updates with the hospital name and a percentage
+bar as each email is dispatched.
+
+---
+
+## Estimated Wait Time
+
+Before the user confirms the production send, the app shows them how long to expect to wait:
+
+```r
+total_effective_emails <- rv$summary_stats$total_effective_emails
+seconds_per_email      <- (60 * 60) / 250          # = 14.4s
+wait_seconds           <- total_effective_emails * seconds_per_email
+wait_minutes           <- wait_seconds / 60
+
+wait_time_text <- if (wait_minutes >= 60) {
+  paste0(round(wait_minutes / 60, 1), " hours")
+} else {
+  paste0(round(wait_minutes, 1), " minutes")
+}
+```
+
+If you're sending to 300 contacts, that's ~72 minutes. Better to know upfront than wonder
+why the app is frozen.
+
+---
+
+## What I'd Do Differently
+
+1. **Move to an SMTP-based solution** — `RDCOMClient` requires Outlook on the server, which
+   is messy in a containerised deployment. `Microsoft365R` or a proper SMTP relay would be
+   more portable.
+
+2. **Run the send loop in a future/promise** — currently `fn.SendAllEmails()` blocks the R
+   process. Using `future_promise()` would let the Shiny session remain responsive, though
+   progress updates from a background thread require additional plumbing.
+
+3. **Add resume-from-failure** — if the loop errors at email 150 of 200, you currently have
+   to re-run from scratch (with the "exclude already sent" filter). An explicit checkpoint
+   would be better.
+
+---
+
+## Packages Used
+
+| Package | Role |
+|---|---|
+| `RDCOMClient` | Outlook COM automation |
+| `rmarkdown` | Render the HTML email template per hospital |
+| `gt` | Colour-coded episode count table inside the email |
+| `waiter` | Full-screen loading overlay during send |
+| `shinyalert` | Confirmation dialogs (test vs production) |
+| `shinyjs` | Disable/enable buttons during send |
+| `reactable` | Campaign preview tables |
+| `highcharter` | Report distribution chart |
+| `dplyr` / `purrr` | Data wrangling and rowwise operations |
+
+---
+
+The complete module lives across `send_all_module.R` (~814 lines), `email_module.R` (~651 lines),
+and `CreateEmail.Rmd` (~260 lines). What started as a scary "just loop through them all"
+script turned into something I'm actually proud to run in production.
+
+If you're building something similar and want to talk through the architecture, feel free to
+open an issue on [GitHub](https://github.com/andrew-fuller) or reach out directly.
