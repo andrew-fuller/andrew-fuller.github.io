@@ -22,8 +22,8 @@
 
 .project-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(37,99,235,0.1);
-  border-color: #2563EB;
+  box-shadow: 0 10px 30px rgba(204,85,0,0.1);
+  border-color: #CC5500;
 }
 
 .dark .project-card {
@@ -58,7 +58,7 @@
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  background: #2563EB;
+  background: #CC5500;
   color: white;
   width: 42px;
   height: 42px;
@@ -66,7 +66,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+  box-shadow: 0 4px 12px rgba(204,85,0,0.35);
   opacity: 0;
   transform: translateY(10px);
   transition: all 0.3s ease;
@@ -81,6 +81,6 @@
 }
 
 .back-to-top:hover {
-  background: #1D4ED8;
+  background: #A84300;
   transform: translateY(-2px);
 }

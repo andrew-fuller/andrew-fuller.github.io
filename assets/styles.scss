@@ -336,6 +336,57 @@ hr {
   opacity: 1;
 }
 
+// ─── Buttons ──────────────────────────────────────────────────────────────────
+.btn-primary {
+  background-color: #CC5500 !important;
+  border-color: #CC5500 !important;
+  color: #FDF5EE !important;
+  font-weight: 600;
+  border-radius: 7px;
+
+  &:hover, &:focus {
+    background-color: #A84300 !important;
+    border-color: #A84300 !important;
+    box-shadow: 0 4px 14px rgba(204,85,0,0.3) !important;
+  }
+}
+
+// ─── Section headings ─────────────────────────────────────────────────────────
+h2 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1C1917;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid #E5DDD5;
+  margin-bottom: 1.25rem;
+}
+
+h3 { color: #2D1F1A; }
+
+// ─── Blockquotes ──────────────────────────────────────────────────────────────
+blockquote {
+  border-left: 3px solid #CC5500;
+  background: #FDF5EE;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0 8px 8px 0;
+  color: #4A3728;
+  font-style: normal;
+}
+
+// ─── Tables ───────────────────────────────────────────────────────────────────
+.table {
+  --bs-table-striped-bg: #FAF5F0;
+  --bs-table-hover-bg: #F5EDE3;
+  border-color: #E5DDD5;
+}
+
+thead th {
+  background: #F2EDE8;
+  color: #1C1917;
+  font-weight: 700;
+  border-color: #D5C8BC;
+}
+
 // ─── Smooth scroll + animations ───────────────────────────────────────────────
 html { scroll-behavior: smooth; }
 
