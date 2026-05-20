@@ -40,7 +40,7 @@ website:
 format:
   html:
     theme:
-      light: [flatly, assets/styles.scss]
+      light: [lumen, assets/styles.scss]
       dark: [darkly, assets/styles-dark.scss]
     css: assets/custom.css
     toc: true
